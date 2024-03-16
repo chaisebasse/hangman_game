@@ -2,14 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+char* scanDynamicString();
+
 int main() {
-  char *word = malloc(sizeof(char));
-  if (word == NULL) {
-    printf("Memory allocation failed.\n");
-    return EXIT_FAILURE;
-  }
   printf("Quel mot voulez-vous faire deviner ?\n");
-  scanf("%s", word);
+  char *word = scanDynamicString();
 
   size_t size = strlen(word);
 
@@ -56,4 +53,43 @@ int main() {
   }
 
   free(word);
+}
+
+char* scanDynamicString() {
+  char* word = NULL;
+  int capacity = 0; // Initial capacity of the word
+  int size = 0;     // Current size of the word
+
+  while(1) {
+    char c = getc(stdin);
+
+    // Check if last character
+    if (c == EOF || c == '\n') {
+      if (word != NULL) {
+        word[size] = '\0';
+      }
+
+      break;
+    }
+
+    // Reallocate memory to add c
+    if (size >= capacity) {
+      capacity = (capacity == 0) ? 1 : capacity * 2;
+      char *temp = realloc(word, capacity * sizeof(char));
+
+      if (temp == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        free(word);
+
+        return NULL;
+      }
+
+      word = temp;
+    }
+
+    // Increment size of word to add c
+    word[size++] = c;
+  }
+
+  return word;
 }
