@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
 char* scanDynamicString();
 
 int main() {
-  printf("Quel mot voulez-vous faire deviner ?\n");
   char *word = scanDynamicString();
 
   size_t size = strlen(word);
@@ -15,7 +16,9 @@ int main() {
   int found_word = 0, found_char, numAttempts = 0;
   for (int i = 0; i < size; i++) {
     guess[i] = '_';
+    printf("%c", guess[i]);
   }
+  printf("\n");
 
   do
   {
@@ -43,6 +46,7 @@ int main() {
       }
       printf("%c", guess[j]);
     }
+    printf("\n");
   } while (found_word != 1 && numAttempts < 6);
 
   if (found_word == 1) {
@@ -56,9 +60,17 @@ int main() {
 }
 
 char* scanDynamicString() {
+  printf("Quel mot voulez-vous faire deviner ?\n");
+
+  struct termios old_termios, new_termios;
   char* word = NULL;
   int capacity = 0; // Initial capacity of the word
   int size = 0;     // Current size of the word
+
+  tcgetattr(STDIN_FILENO, &old_termios);
+  new_termios = old_termios;
+  new_termios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL | ICANON);
+  tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
 
   while(1) {
     char c = getc(stdin);
@@ -90,6 +102,8 @@ char* scanDynamicString() {
     // Increment size of word to add c
     word[size++] = c;
   }
+
+  tcsetattr(STDIN_FILENO, TCSANOW, &old_termios);
 
   return word;
 }
