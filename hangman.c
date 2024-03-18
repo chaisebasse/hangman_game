@@ -21,17 +21,17 @@ int main() {
   memset(guess, '_', size);
   printGuess(guess, size);
 
-  while (!isWordGuessed(guess, size) && numAttempts < 6) {
+  while (!isWordGuessed(guess, size) && numAttempts < 10) {
     printf("Entrer une lettre :\t");
     scanf(" %c", &letter);
 
     if (!isLetterInWord(letter, word, guess, size)) {
       printf("Cette lettre n'appartient pas au mot\n");
       numAttempts++;
-      printf("Tentatives restantes : %i\n", 6-numAttempts);
+      printf("Tentatives restantes : %i\n", 10-numAttempts);
     }
 
-    displayHangman(6-numAttempts);
+    displayHangman(10-numAttempts);
     printGuess(guess, size);
   }
 
@@ -121,32 +121,20 @@ char* scanDynamicString() {
   return word;
 }
 
-// void displayHangman(int attempts) {
-//   if (attempts == 5) {
-//     printf("O\n");
-//   } else if (attempts == 4) {
-//     printf("O\n|\n");
-//   } else if (attempts == 3) {
-//     printf(" O\n-|\n");
-//   } else if (attempts == 2) {
-//     printf(" O\n-|-\n");
-//   } else if (attempts == 1) {
-//     printf(" O\n-|-\n/\n");
-//   } else if (attempts == 0) {
-//     printf(" O\n-|-\n/\\\n");
-//   }
-// }
-
 void displayHangman(int attempts) {
   const char *hangmanStages[] = {
-    "      _____\n      |/    |\n      |\n      |\n      |\n      |\n=======\n",
-    "      _____\n      |/    |\n      |     O\n      |\n      |\n      |\n=======\n",
-    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |\n      |\n=======\n",
-    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |     / \n      |\n=======\n",
-    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |     / \\\n      |\n=======\n",
-    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |     / \\\n      |      \n      |\n=======\n"
+    "=======\n",
+    "   |\n   |\n   |\n   |\n   |\n=======\n",
+    "   _____\n   |\n   |\n   |\n   |\n   |\n=======\n",
+    "   _____\n   |/  \n   |\n   |\n   |\n   |\n=======\n",
+    "   _____\n   |/  |\n   |\n   |\n   |\n   |\n=======\n",
+    "   _____\n   |/  |\n   |   O\n   |\n   |\n   |\n=======\n",
+    "   _____\n   |/  |\n   |   O\n   |   |\n   |\n   |\n=======\n",
+    "   _____\n   |/  |\n   |   O\n   |  /|\n   |\n   |\n=======\n",
+    "   _____\n   |/  |\n   |   O\n   |  /|\\\n   |\n   |\n=======\n",
+    "   _____\n   |/  |\n   |   O\n   |  /|\\\n   |  /\n   |\n=======\n",
+    "   _____\n   |/  |\n   |   O\n   |  /|\\\n   |  / \\\n   |\n=======\n"
   };
 
-
-  printf("%s", hangmanStages[6 - attempts]);
+  printf("%s", hangmanStages[10 - attempts]);
 }
