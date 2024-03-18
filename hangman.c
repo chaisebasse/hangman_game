@@ -1,22 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <termios.h>
 #include <unistd.h>
-#include <stdbool.h>
+#include <curses.h>
 
 char* scanDynamicString();
 void printGuess(char* guess, int size);
 bool isLetterInWord(char letter, char* word, char* guess, int size);
 bool isWordGuessed(char* guess, int size);
 void displayHangman(int attempts);
+int selectDifficulty();
 
 int main() {
   char *word = scanDynamicString();
   int size = strlen(word);
   char guess[size];
   char letter;
-  int numAttempts = 0;
+  int numAttempts = selectDifficulty();
 
   memset(guess, '_', size);
   printGuess(guess, size);
@@ -72,6 +74,7 @@ bool isWordGuessed(char* guess, int size) {
   return true;
 }
 
+// need to use thermios necessarily ? Can't use noecho() ?
 char* scanDynamicString() {
   printf("Quel mot voulez-vous faire deviner ?\n");
 
@@ -137,4 +140,72 @@ void displayHangman(int attempts) {
   };
 
   printf("%s", hangmanStages[10 - attempts]);
+}
+
+int selectDifficulty() {
+  int difficulty = 0;
+  int selected = 0;
+
+  // Initialize curses
+  initscr();
+  raw();
+  keypad(stdscr, TRUE);
+  noecho();
+
+  // Difficlty options
+  printw("Difficulty:\n");
+  printw("  Easy\n");
+  printw("  Normal\n");
+  printw("  Hard\n");
+
+  move(selected + 1, 4);
+
+  while (1) {
+    int ch = getch();
+
+    // UP
+    if (ch == KEY_UP) {
+      selected--;
+      if (selected < 0) {
+        selected = 2;
+      }
+      move(selected + 1, 4);
+    }
+
+    // Down
+    if (ch == KEY_DOWN) {
+      selected++;
+      if (selected > 2) {
+        selected = 0;
+      }
+      move(selected + 1, 4);
+    }
+
+    // Enter
+    if (ch == 10) {
+      break;
+    }
+
+  }
+
+  // Set difficulty
+  switch (selected) {
+    case 0:
+      difficulty = 0;
+      break;
+    case 1:
+      difficulty = 4;
+      break;
+    case 2:
+      difficulty = 7;
+      break;
+  }
+
+  endwin();
+  echo();
+
+  // Print selected difficulty
+  printf("Nombre de tentatives: %d\n", 10 - difficulty);
+
+  return difficulty;
 }
