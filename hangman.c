@@ -3,53 +3,37 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 char* scanDynamicString();
+void printGuess(char* guess, int size);
+bool isLetterInWord(char letter, char* word, char* guess, int size);
+bool isWordGuessed(char* guess, int size);
 
 int main() {
   char *word = scanDynamicString();
-
-  size_t size = strlen(word);
-
+  int size = strlen(word);
   char guess[size];
   char letter;
-  int found_word = 0, found_char, numAttempts = 0;
-  for (int i = 0; i < size; i++) {
-    guess[i] = '_';
-    printf("%c", guess[i]);
-  }
-  printf("\n");
+  int numAttempts = 0;
 
-  do
-  {
+  memset(guess, '_', size);
+  printGuess(guess, size);
+
+  while (!isWordGuessed(guess, size) && numAttempts < 6) {
     printf("Entrer une lettre :\t");
     scanf(" %c", &letter);
-    found_char = 0;
 
-    for (int i = 0; i < size; i++) {
-      if (word[i] == letter && guess[i] != letter) {
-        guess[i] = letter;
-        found_char = 1;
-      }
-    }
-
-    if (found_char == 0) {
+    if (!isLetterInWord(letter, word, guess, size)) {
       printf("Cette lettre n'appartient pas au mot\n");
       numAttempts++;
       printf("Tentatives restantes : %i\n", 6-numAttempts);
     }
 
-    found_word = 1;
-    for (int j = 0; j < size; j++) {
-      if (guess[j] == '_') {
-        found_word = 0;
-      }
-      printf("%c", guess[j]);
-    }
-    printf("\n");
-  } while (found_word != 1 && numAttempts < 6);
+    printGuess(guess, size);
+  }
 
-  if (found_word == 1) {
+  if (isWordGuessed(guess, size)) {
     printf("\nBravo, tu as trouvé le mot\n");
   } else {
     printf("\nTu as été pendu\n");
@@ -57,6 +41,33 @@ int main() {
   }
 
   free(word);
+}
+
+void printGuess(char* guess, int size) {
+  for (int i = 0; i < size; i++) {
+    printf("%c", guess[i]);
+  }
+  printf("\n");
+}
+
+bool isLetterInWord(char letter, char* word, char* guess, int size) {
+  bool found_char = false;
+  for (int i = 0; i < size; i++) {
+    if (word[i] == letter && guess[i] != letter) {
+      guess[i] = letter;
+      found_char = true;
+    }
+  }
+  return found_char;
+}
+
+bool isWordGuessed(char* guess, int size) {
+  for (int i = 0; i < size; i++) {
+    if (guess[i] == '_') {
+      return false;
+    }
+  }
+  return true;
 }
 
 char* scanDynamicString() {
