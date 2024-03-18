@@ -9,6 +9,7 @@ char* scanDynamicString();
 void printGuess(char* guess, int size);
 bool isLetterInWord(char letter, char* word, char* guess, int size);
 bool isWordGuessed(char* guess, int size);
+void displayHangman(int attempts);
 
 int main() {
   char *word = scanDynamicString();
@@ -30,6 +31,7 @@ int main() {
       printf("Tentatives restantes : %i\n", 6-numAttempts);
     }
 
+    displayHangman(6-numAttempts);
     printGuess(guess, size);
   }
 
@@ -117,4 +119,34 @@ char* scanDynamicString() {
   tcsetattr(STDIN_FILENO, TCSANOW, &old_termios);
 
   return word;
+}
+
+// void displayHangman(int attempts) {
+//   if (attempts == 5) {
+//     printf("O\n");
+//   } else if (attempts == 4) {
+//     printf("O\n|\n");
+//   } else if (attempts == 3) {
+//     printf(" O\n-|\n");
+//   } else if (attempts == 2) {
+//     printf(" O\n-|-\n");
+//   } else if (attempts == 1) {
+//     printf(" O\n-|-\n/\n");
+//   } else if (attempts == 0) {
+//     printf(" O\n-|-\n/\\\n");
+//   }
+// }
+
+void displayHangman(int attempts) {
+  const char *hangmanStages[] = {
+    "      _____\n      |/    |\n      |\n      |\n      |\n      |\n=======\n",
+    "      _____\n      |/    |\n      |     O\n      |\n      |\n      |\n=======\n",
+    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |\n      |\n=======\n",
+    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |     / \n      |\n=======\n",
+    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |     / \\\n      |\n=======\n",
+    "      _____\n      |/    |\n      |     O\n      |     /|\\\n      |     / \\\n      |      \n      |\n=======\n"
+  };
+
+
+  printf("%s", hangmanStages[6 - attempts]);
 }
