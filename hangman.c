@@ -2,9 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include <termios.h>
 #include <unistd.h>
 #include <curses.h>
+
+typedef struct score {
+    char* medal;
+    int rating;
+} score;
 
 char* scanDynamicString();
 void printGuess(char* guess, int size);
@@ -12,33 +18,47 @@ bool isLetterInWord(char letter, char* word, char* guess, int size);
 bool isWordGuessed(char* guess, int size);
 void displayHangman(int attempts);
 int selectDifficulty();
+score calculateScore(double elapsedTime, int numFails, int difficulty, int numAttempts);
 
 int main() {
   char *word = scanDynamicString();
   int size = strlen(word);
   char guess[size];
   char letter;
-  int numAttempts = selectDifficulty();
+  const int difficulty = selectDifficulty(); // Actual difficulty value
+  int numAttempts = 0;
+  int numFails = 0; // Track the number of wrong guesses
+  time_t startTime, endTime; // Variables to track time
+  double elapsedTime;
 
   memset(guess, '_', size);
   printGuess(guess, size);
 
-  while (!isWordGuessed(guess, size) && numAttempts < 10) {
+  startTime = time(NULL);
+
+  while (!isWordGuessed(guess, size) && difficulty > 0) {
     printf("Entrer une lettre :\t");
     scanf(" %c", &letter);
+    numAttempts++;
 
     if (!isLetterInWord(letter, word, guess, size)) {
       printf("Cette lettre n'appartient pas au mot\n");
-      numAttempts++;
-      printf("Tentatives restantes : %i\n", 10-numAttempts);
+      numFails++; // Increment numFails when a wrong letter is guessed
+      printf("tentatives restantes : %i\n", difficulty - numFails);
     }
 
-    displayHangman(10-numAttempts);
+    displayHangman(difficulty);
     printGuess(guess, size);
   }
 
+  endTime = time(NULL);
+  elapsedTime = difftime(endTime, startTime);
+
+  score playerScore = calculateScore(elapsedTime, numFails, difficulty, numAttempts);
+
   if (isWordGuessed(guess, size)) {
-    printf("\nBravo, tu as trouvé le mot\n");
+    printf("\nBravo, tu as trouvé le mot en %i tentatives\n", numAttempts);
+    printf("%d%% jusqu'à la médaille de %s", playerScore.rating, playerScore.medal);
   } else {
     printf("\nTu as été pendu\n");
     printf("Le mot était : %s\n", word);
@@ -74,9 +94,9 @@ bool isWordGuessed(char* guess, int size) {
   return true;
 }
 
-// need to use thermios necessarily ? Can't use noecho() ?
+// Use termios or noecho() ?
 char* scanDynamicString() {
-  printf("Quel mot voulez-vous faire deviner ?\n");
+  printf("What word do you want to guess?\n");
 
   struct termios old_termios, new_termios;
   char* word = NULL;
@@ -108,7 +128,6 @@ char* scanDynamicString() {
       if (temp == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         free(word);
-
         return NULL;
       }
 
@@ -124,7 +143,8 @@ char* scanDynamicString() {
   return word;
 }
 
-void displayHangman(int attempts) {
+void displayHangman(int fails) {
+  // For each number of wrong attempts there is a specific version of the hangman
   const char *hangmanStages[] = {
     "=======\n",
     "   |\n   |\n   |\n   |\n   |\n=======\n",
@@ -139,11 +159,10 @@ void displayHangman(int attempts) {
     "   _____\n   |/  |\n   |   O\n   |  /|\\\n   |  / \\\n   |\n=======\n"
   };
 
-  printf("%s", hangmanStages[10 - attempts]);
+  printf("%s", hangmanStages[10 - fails]);
 }
 
 int selectDifficulty() {
-  int difficulty = 0;
   int selected = 0;
 
   // Initialize curses
@@ -152,7 +171,7 @@ int selectDifficulty() {
   keypad(stdscr, TRUE);
   noecho();
 
-  // Difficlty options
+  // Difficulty options
   printw("Difficulty:\n");
   printw("  Easy\n");
   printw("  Normal\n");
@@ -160,8 +179,9 @@ int selectDifficulty() {
 
   move(selected + 1, 4);
 
+  int ch;
   while (1) {
-    int ch = getch();
+    ch = getch();
 
     // UP
     if (ch == KEY_UP) {
@@ -188,16 +208,17 @@ int selectDifficulty() {
 
   }
 
-  // Set difficulty
+  int difficulty;
+  // Set difficulty based on selection
   switch (selected) {
     case 0:
-      difficulty = 0;
+      difficulty = 10; // Easy
       break;
     case 1:
-      difficulty = 4;
+      difficulty = 6; // Normal
       break;
     case 2:
-      difficulty = 7;
+      difficulty = 3; // Hard
       break;
   }
 
@@ -205,7 +226,28 @@ int selectDifficulty() {
   echo();
 
   // Print selected difficulty
-  printf("Nombre de tentatives: %d\n", 10 - difficulty);
+  printf("Number of attempts allowed: %d\n", difficulty);
 
   return difficulty;
+}
+
+score calculateScore(double elapsedTime, int numFails, int difficulty, int numAttempts) {
+  score myScore;
+  myScore.rating = 100;
+
+  // Determine medal according to time spent
+  if (elapsedTime <= 20) {
+    myScore.medal = "Or";
+  } else if (elapsedTime <= 50) {
+    myScore.medal = "Argent";
+  } else {
+    myScore.medal = "Bronze";
+  }
+
+  if (numFails > 0) {
+    double deduction_per_fail = 100.0 / (difficulty); // Calculate the deduction per fail based on the difficulty
+    myScore.rating -= deduction_per_fail * numFails; // Deduct from the rating based on the number of fails and the deduction per fail
+  }
+
+  return myScore;
 }
